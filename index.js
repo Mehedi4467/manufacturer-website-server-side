@@ -42,6 +42,7 @@ async function run() {
         const productsCollection = client.db("Auto_care").collection("Products");
         const ordersCollection = client.db("Auto_care").collection("Orders");
         const usersCollection = client.db("Auto_care").collection("Users");
+        const reviewsCollection = client.db("Auto_care").collection("Reviews");
 
 
         // product api
@@ -105,6 +106,16 @@ async function run() {
             const result = await ordersCollection.deleteOne(query);
             res.send(result);
         });
+
+        // post review api
+        app.post('/review', async (req, res) => {
+            const newReview = req.body;
+            const result = await reviewsCollection.insertOne(newReview);
+            res.send(result);
+        });
+
+
+
 
     }
     finally {
