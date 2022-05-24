@@ -89,6 +89,29 @@ async function run() {
             res.send({ result, token });
         });
 
+        //update user profile informatrion
+        app.put('/user/update/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+
+            res.send(result);
+        });
+
+
+        // get user information api
+
+        app.get('/user/:email', verifyJwt, async (req, res) => {
+            const email = req.params.email;
+            const requester = req.decoded.email;
+            const allUser = await usersCollection.findOne({ email: requester });
+            res.send(allUser);
+        });
 
         // get all order api
         app.get('/order/:email', verifyJwt, async (req, res) => {
