@@ -60,7 +60,6 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const result = await productsCollection.findOne(query);
             res.send(result);
-
         });
 
         // post order api
@@ -87,6 +86,24 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '30d' });
             res.send({ result, token });
+        });
+
+
+        // get all order api
+        app.get('/order/:email', verifyJwt, async (req, res) => {
+            const email = req.params.email;
+            const requester = req.decoded.email;
+            console.log(email)
+            const allOrder = await ordersCollection.find({ email: requester }).toArray();
+            res.send(allOrder);
+        });
+
+        //delete order by id api 
+        app.delete('/order/delete/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.deleteOne(query);
+            res.send(result);
         });
 
     }
