@@ -148,17 +148,34 @@ async function run() {
             res.send({ admin: isAdmin });
         });
 
+        // get all user 
+        app.get('/user/allUser/:email', verifyJwt, async (req, res) => {
+            // const email = req.params.email;
+            const requester = req.decoded.email;
+            const requesterAcount = await usersCollection.findOne({ email: requester });
+            if (requesterAcount.role === 'admin') {
+                const user = await usersCollection.find({}).toArray();
+
+                res.send(user);
+            }
+            else {
+                res.status(403).send({ message: "Forbidden" });
+            }
+
+        });
+
         // make admin
         app.put('/user/admin/:email', verifyJwt, async (req, res) => {
             const email = req.params.email;
             const requester = req.decoded.email;
             const requesterAcount = await usersCollection.findOne({ email: requester });
+            console.log(requesterAcount)
             if (requesterAcount.role === 'admin') {
                 const filter = { email: email };
                 const updateDoc = {
                     $set: { role: 'admin' },
                 };
-                const result = await adminUsersCollection.updateOne(filter, updateDoc);
+                const result = await usersCollection.updateOne(filter, updateDoc);
                 res.send(result);
 
             }
@@ -167,6 +184,8 @@ async function run() {
             }
 
         });
+
+
 
 
 
