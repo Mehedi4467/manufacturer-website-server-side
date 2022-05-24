@@ -4,6 +4,7 @@ const app = express();
 const ObjectId = require('mongodb').ObjectId;
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 
 
@@ -11,7 +12,21 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+const verifyJwt = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'UnAuthorized Access' });
 
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden Access' })
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
 
 // database connecte
 
@@ -26,6 +41,7 @@ async function run() {
         await client.connect();
         const productsCollection = client.db("Auto_care").collection("Products");
         const ordersCollection = client.db("Auto_care").collection("Orders");
+        const usersCollection = client.db("Auto_care").collection("Users");
 
 
         // product api
@@ -54,6 +70,23 @@ async function run() {
             const result = await ordersCollection.insertOne(newOrder);
             console.log('adding new user', result.insertedId);
             res.send(result);
+        });
+
+
+        // user information api
+
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '30d' });
+            res.send({ result, token });
         });
 
     }
