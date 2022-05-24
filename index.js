@@ -139,6 +139,37 @@ async function run() {
 
 
 
+        // get admin api
+
+        app.get('/user/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await usersCollection.findOne({ email: email });
+            const isAdmin = user?.role === "admin";
+            res.send({ admin: isAdmin });
+        });
+
+        // make admin
+        app.put('/user/admin/:email', verifyJwt, async (req, res) => {
+            const email = req.params.email;
+            const requester = req.decoded.email;
+            const requesterAcount = await usersCollection.findOne({ email: requester });
+            if (requesterAcount.role === 'admin') {
+                const filter = { email: email };
+                const updateDoc = {
+                    $set: { role: 'admin' },
+                };
+                const result = await adminUsersCollection.updateOne(filter, updateDoc);
+                res.send(result);
+
+            }
+            else {
+                res.status(403).send({ message: "Forbidden" });
+            }
+
+        });
+
+
+
 
     }
     finally {
