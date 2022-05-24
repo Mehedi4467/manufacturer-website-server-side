@@ -25,6 +25,7 @@ async function run() {
     try {
         await client.connect();
         const productsCollection = client.db("Auto_care").collection("Products");
+        const ordersCollection = client.db("Auto_care").collection("Orders");
 
 
         // product api
@@ -40,11 +41,19 @@ async function run() {
 
         app.get('/product/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
             const query = { _id: ObjectId(id) };
             const result = await productsCollection.findOne(query);
             res.send(result);
 
+        });
+
+        // post order api
+        app.post('/order', async (req, res) => {
+            const newOrder = req.body;
+
+            const result = await ordersCollection.insertOne(newOrder);
+            console.log('adding new user', result.insertedId);
+            res.send(result);
         });
 
     }
