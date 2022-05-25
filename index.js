@@ -46,6 +46,15 @@ async function run() {
 
 
         // product api
+
+        // post order api
+        app.post('/product', async (req, res) => {
+            const newProduct = req.body;
+            const result = await productsCollection.insertOne(newProduct);
+            res.send(result);
+        });
+
+
         // get all product api
         app.get('/product', async (req, res) => {
             const query = {};
@@ -66,9 +75,7 @@ async function run() {
         // post order api
         app.post('/order', async (req, res) => {
             const newOrder = req.body;
-
             const result = await ordersCollection.insertOne(newOrder);
-            console.log('adding new user', result.insertedId);
             res.send(result);
         });
 
