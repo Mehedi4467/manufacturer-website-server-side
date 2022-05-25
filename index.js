@@ -72,6 +72,15 @@ async function run() {
             res.send(result);
         });
 
+
+        //delete order by id api 
+        app.delete('/product/delete/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        });
+
         // post order api
         app.post('/order', async (req, res) => {
             const newOrder = req.body;
