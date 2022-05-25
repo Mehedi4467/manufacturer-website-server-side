@@ -226,7 +226,7 @@ async function run() {
         app.post("/create-payment-intent", verifyJwt, async (req, res) => {
             const { price } = req.body;
             const amount = price * 100;
-            console.log(amount)
+
 
             // Create a PaymentIntent with the order amount and currency
             const paymentIntent = await stripe.paymentIntents.create({
@@ -258,6 +258,20 @@ async function run() {
             res.send(updateOrder);
         });
 
+
+        //orderstatus change 
+        app.put('/order/status/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateStatus = {
+                $set: {
+                    status: 'Approved'
+                }
+            }
+            const orderUpdateStatus = await ordersCollection.updateOne(filter, updateStatus, options);
+            res.send(orderUpdateStatus);
+        })
 
 
 
