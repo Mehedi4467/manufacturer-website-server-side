@@ -5,6 +5,7 @@ const ObjectId = require('mongodb').ObjectId;
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE_KEY);
 const port = process.env.PORT || 5000;
 
 
@@ -47,7 +48,7 @@ async function run() {
 
         // product api
 
-        // post order api
+        // post product api
         app.post('/product', async (req, res) => {
             const newProduct = req.body;
             const result = await productsCollection.insertOne(newProduct);
@@ -86,6 +87,32 @@ async function run() {
             const newOrder = req.body;
             const result = await ordersCollection.insertOne(newOrder);
             res.send(result);
+        });
+
+
+        // get all order api
+        app.get('/order', async (req, res) => {
+            const query = {};
+            const cursor = ordersCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+        });
+
+        //get order by id
+
+
+        app.get('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.findOne(query);
+            res.send(result);
+        });
+
+        app.get('/customer-order/:email', verifyJwt, async (req, res) => {
+            const email = req.params.email;
+            const requester = req.decoded.email;
+            const allOrder = await ordersCollection.find({ email: requester }).toArray();
+            res.send(allOrder);
         });
 
 
@@ -129,14 +156,7 @@ async function run() {
             res.send(allUser);
         });
 
-        // get all order api
-        app.get('/order/:email', verifyJwt, async (req, res) => {
-            const email = req.params.email;
-            const requester = req.decoded.email;
-            console.log(email)
-            const allOrder = await ordersCollection.find({ email: requester }).toArray();
-            res.send(allOrder);
-        });
+
 
         //delete order by id api 
         app.delete('/order/delete/:id', async (req, res) => {
@@ -201,6 +221,42 @@ async function run() {
 
         });
 
+        //payment api
+
+        app.post("/create-payment-intent", verifyJwt, async (req, res) => {
+            const { price } = req.body;
+            const amount = price * 100;
+            console.log(amount)
+
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ['card'],
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
+
+        // update order after payment
+
+        app.patch('/order/update/:id', verifyJwt, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId,
+
+                }
+            }
+            const updateOrder = await ordersCollection.updateOne(filter, updateDoc);
+            res.send(updateOrder);
+        });
 
 
 
