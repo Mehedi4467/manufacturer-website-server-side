@@ -174,6 +174,15 @@ async function run() {
         });
 
 
+        // get all review api
+        app.get('/review', async (req, res) => {
+            const query = {};
+            const cursor = reviewsCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        });
+
+
 
         // get admin api
 
@@ -271,7 +280,10 @@ async function run() {
             }
             const orderUpdateStatus = await ordersCollection.updateOne(filter, updateStatus, options);
             res.send(orderUpdateStatus);
-        })
+        });
+
+
+
 
 
 
